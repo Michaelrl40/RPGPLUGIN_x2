@@ -1,0 +1,24 @@
+name: MinecraftRPG
+version: '1.0-SNAPSHOT'
+main: com.example.minecraftrpg.MinecraftRPG
+api-version: '1.20'
+commands:
+  class:
+    description: Manage your character class
+    usage: /class [select|info]
+  level:
+    description: View your level and experience information
+    usage: /level
+  attributes:
+    description: View and manage your attributes
+    usage: /attributes [view|add]
+  skills:
+    description: View and use your skills
+    usage: /skills [list|use]
+  party:
+    description: Party management commands
+    usage: /party [create|invite|join|leave]
+  status:
+    description: Show your character's status and resources
+    usage: /status
+    aliases: [ stats ]
