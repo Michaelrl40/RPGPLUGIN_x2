@@ -12,6 +12,9 @@ import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.UUID;
 
 import java.util.HashMap;
 
@@ -19,6 +22,8 @@ public class FoodHealingManager implements Listener {
     private final MinecraftRPG plugin;
     private final CombatManager combatManager;
     private final HashMap<Material, Double> foodHealing = new HashMap<>();
+    private final Set<UUID> healingPlayers = new HashSet<>();
+
 
     public FoodHealingManager(MinecraftRPG plugin, CombatManager combatManager) {
         this.plugin = plugin;
@@ -55,6 +60,11 @@ public class FoodHealingManager implements Listener {
         // Cancel vanilla food mechanics
         event.setCancelled(true);
 
+        if (healingPlayers.contains(player.getUniqueId())) {
+            player.sendMessage(ChatColor.RED + "You must wait for your current healing to complete!");
+            return;
+        }
+
         // Check if in combat
         if (combatManager.isInCombat(player)) {
             player.sendMessage(ChatColor.RED + "You cannot eat while in combat!");
@@ -65,8 +75,14 @@ public class FoodHealingManager implements Listener {
         Double healAmount = foodHealing.get(food.getType());
         if (healAmount == null) return;
 
-        // Start healing over time (5 seconds duration)
-        new HealingTask(player, healAmount, 5).runTaskTimer(plugin, 0L, 1L);
+        healingPlayers.add(player.getUniqueId());
+
+        new HealingTask(plugin, player, healAmount, 5) {
+            @Override
+            public void onComplete() {
+                healingPlayers.remove(player.getUniqueId());
+            }
+        }.runTaskTimer(plugin, 0L, 1L);
 
         player.sendMessage(ChatColor.GREEN + "You begin to heal from eating " +
                 formatFoodName(food.getType().name()));

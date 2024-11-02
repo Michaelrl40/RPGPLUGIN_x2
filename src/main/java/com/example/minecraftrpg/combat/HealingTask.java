@@ -1,38 +1,38 @@
 package com.example.minecraftrpg.combat;
 
+import com.example.minecraftrpg.MinecraftRPG;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-public class HealingTask extends BukkitRunnable {
+public abstract class HealingTask extends BukkitRunnable {
     private final Player player;
     private final double totalHeal;
-    private final int duration; // in ticks (20 ticks = 1 second)
+    private final int duration;
     private final double healPerTick;
     private int ticksElapsed;
+    private final MinecraftRPG plugin;
 
-    public HealingTask(Player player, double totalHeal, int durationInSeconds) {
+    public HealingTask(MinecraftRPG plugin, Player player, double totalHeal, int durationInSeconds) {
+        this.plugin = plugin;
         this.player = player;
         this.totalHeal = totalHeal;
-        this.duration = durationInSeconds * 20; // convert seconds to ticks
+        this.duration = durationInSeconds * 20;
         this.healPerTick = totalHeal / duration;
         this.ticksElapsed = 0;
     }
 
     @Override
     public void run() {
-        if (ticksElapsed >= duration || !player.isOnline()) {
-            this.cancel();
-            return;
-        }
-
-        if (player.isDead()) {
+        if (ticksElapsed >= duration || !player.isOnline() || player.isDead()) {
+            onComplete();
             this.cancel();
             return;
         }
 
         // Don't heal if at max health
         if (player.getHealth() >= player.getMaxHealth()) {
+            onComplete();
             this.cancel();
             return;
         }
@@ -51,4 +51,6 @@ public class HealingTask extends BukkitRunnable {
 
         ticksElapsed++;
     }
+
+    public abstract void onComplete();
 }

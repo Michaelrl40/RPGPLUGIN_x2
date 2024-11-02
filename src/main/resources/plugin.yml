@@ -22,3 +22,10 @@ commands:
     description: Show your character's status and resources
     usage: /status
     aliases: [ stats ]
+  attribute:
+    description: Manage your attributes
+    usage: /attribute [info|spend] [attribute]
+  giveexp:
+    description: Grant experience to a player
+    usage: /giveexp <player> <amount>
+    permission: minecraftrpg.admin

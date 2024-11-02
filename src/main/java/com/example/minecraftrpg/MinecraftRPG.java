@@ -2,8 +2,7 @@ package com.example.minecraftrpg;
 
 import com.example.minecraftrpg.combat.CombatManager;
 import com.example.minecraftrpg.combat.FoodHealingManager;
-import com.example.minecraftrpg.commands.LevelCommand;
-import com.example.minecraftrpg.commands.StatusCommand;
+import com.example.minecraftrpg.commands.*;
 import com.example.minecraftrpg.events.MobExpListener;
 import com.example.minecraftrpg.resources.ResourceManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -11,8 +10,8 @@ import com.example.minecraftrpg.database.DatabaseManager;
 import com.example.minecraftrpg.leveling.ExperienceManager;
 import com.example.minecraftrpg.events.PlayerDataListener;
 import com.example.minecraftrpg.classes.ClassManager;
-import com.example.minecraftrpg.commands.ClassCommand;
 import org.bukkit.entity.Player;
+import com.example.minecraftrpg.attributes.AttributeManager;
 
 public class MinecraftRPG extends JavaPlugin {
     private DatabaseManager database;
@@ -21,6 +20,7 @@ public class MinecraftRPG extends JavaPlugin {
     private ResourceManager resourceManager;
     private CombatManager combatManager;
     private FoodHealingManager foodHealingManager;
+    private AttributeManager attributeManager;
 
     @Override
     public void onEnable() {
@@ -32,13 +32,13 @@ public class MinecraftRPG extends JavaPlugin {
                 return;
             }
 
-            expManager = new ExperienceManager();
+            expManager = new ExperienceManager(this);
             if (expManager == null) {
                 getLogger().severe("Failed to initialize ExperienceManager!");
                 return;
             }
 
-            classManager = ClassManager.getInstance(this);
+            classManager = new ClassManager(this);
             if (classManager == null) {
                 getLogger().severe("Failed to initialize ClassManager!");
                 return;
@@ -60,6 +60,13 @@ public class MinecraftRPG extends JavaPlugin {
             foodHealingManager = new FoodHealingManager(this, combatManager);
             if (foodHealingManager == null) {
                 getLogger().severe("Failed to initialize FoodHealingManager!");
+                return;
+            }
+
+            // Add the new AttributeManager
+            attributeManager = new AttributeManager(this);
+            if (attributeManager == null) {
+                getLogger().severe("Failed to initialize AttributeManager!");
                 return;
             }
 
@@ -85,6 +92,8 @@ public class MinecraftRPG extends JavaPlugin {
             getCommand("class").setExecutor(new ClassCommand(this));
             getCommand("level").setExecutor(new LevelCommand(this));
             getCommand("status").setExecutor(new StatusCommand(this));
+            getCommand("attribute").setExecutor(new AttributeCommand(this));
+            getCommand("giveexp").setExecutor(new GiveExpCommand(this));// Add this line
 
         } catch (Exception e) {
             getLogger().severe("Error during plugin initialization: " + e.getMessage());
@@ -135,4 +144,7 @@ public class MinecraftRPG extends JavaPlugin {
         return combatManager;
     }
 
+    public AttributeManager getAttributeManager() {
+        return attributeManager;
+    }
 }

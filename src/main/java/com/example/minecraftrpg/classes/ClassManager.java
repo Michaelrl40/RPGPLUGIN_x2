@@ -1,67 +1,75 @@
 package com.example.minecraftrpg.classes;
 
 import com.example.minecraftrpg.MinecraftRPG;
-import com.example.minecraftrpg.classes.classes.*;
+import com.example.minecraftrpg.classes.classes.Apprentice;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class ClassManager {
-    private static ClassManager instance;
+public class ClassManager implements Listener {
     private final MinecraftRPG plugin;
-    private final Map<String, RPGClass> availableClasses;
-    private final Map<UUID, String> playerClasses;
+    private final Map<String, RPGClass> availableClasses = new HashMap<>();
+    private final Map<UUID, String> playerClasses = new HashMap<>();
 
-    private ClassManager(MinecraftRPG plugin) {
+    public ClassManager(MinecraftRPG plugin) {
         this.plugin = plugin;
-        this.availableClasses = new HashMap<>();
-        this.playerClasses = new HashMap<>();
         registerClasses();
     }
 
-    public static ClassManager getInstance(MinecraftRPG plugin) {
-        if (instance == null) {
-            instance = new ClassManager(plugin);
-        }
-        return instance;
+    public String getPlayerClass(UUID uuid) {
+        return playerClasses.get(uuid);
     }
 
     private void registerClasses() {
-        availableClasses.put("Warrior", new Warrior());
-        availableClasses.put("Mage", new Mage());
-        availableClasses.put("Archer", new Archer());
+        // Register all classes here
+        registerClass(new Apprentice());
+        // Add more classes...
     }
 
-    public boolean setPlayerClass(Player player, String className) {
-        if (availableClasses.containsKey(className)) {
-            playerClasses.put(player.getUniqueId(), className);
-            plugin.getDatabase().savePlayerData(player, className);
-            return true;
-        }
-        return false;
+    private void registerClass(RPGClass rpgClass) {
+        availableClasses.put(rpgClass.getClassName().toLowerCase(), rpgClass);
     }
 
-    public String getPlayerClass(UUID uuid) {
-        return playerClasses.getOrDefault(uuid, "Warrior"); // Default to Warrior if no class is set
-    }
+    @EventHandler
+    public void onPlayerAttack(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player player)) return;
 
-    public RPGClass getClass(String className) {
-        return availableClasses.get(className);
-    }
+        String className = getPlayerClass(player.getUniqueId());
+        if (className == null) return;
 
-    public boolean hasClass(UUID uuid) {
-        return playerClasses.containsKey(uuid);
-    }
+        RPGClass rpgClass = availableClasses.get(className.toLowerCase());
+        if (rpgClass == null) return;
 
-    public Map<String, RPGClass> getAvailableClasses() {
-        return availableClasses;
-    }
-
-    public void loadPlayerClass(UUID uuid, String className) {
-        if (availableClasses.containsKey(className)) {
-            playerClasses.put(uuid, className);
+        // Check if player can use their weapon
+        if (!rpgClass.canUseWeapon(player.getInventory().getItemInMainHand().getType())) {
+            event.setCancelled(true);
+            player.sendMessage(ChatColor.RED + "Your class cannot use this weapon!");
         }
     }
+
+    public boolean canAdvanceClass(Player player, String newClassName) {
+        String currentClass = getPlayerClass(player.getUniqueId());
+        if (currentClass == null) return false;
+
+        RPGClass current = availableClasses.get(currentClass.toLowerCase());
+        RPGClass newClass = availableClasses.get(newClassName.toLowerCase());
+
+        if (current == null || newClass == null) return false;
+
+        int level = plugin.getExperienceManager().getLevel(player.getUniqueId(), currentClass);
+
+        // Check if player meets level requirements
+        if (level < newClass.getTier().getMinLevel()) return false;
+
+        // Check if new class is a valid upgrade option
+        return current.getUpgradeOptions().contains(newClassName);
+    }
+
+    // Other existing methods...
 }

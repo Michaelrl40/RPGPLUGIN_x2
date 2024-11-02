@@ -1,8 +1,9 @@
 package com.example.minecraftrpg.leveling;
 
+import com.example.minecraftrpg.MinecraftRPG;
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;
-import org.bukkit.entity.Player;
+    import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -12,6 +13,11 @@ public class ExperienceManager {
     private static final int BASE_XP_1_40 = 25000;
     private static final int BASE_XP_41_50 = 25000;
     private final HashMap<UUID, PlayerExperience> playerExp = new HashMap<>();
+    private final MinecraftRPG plugin;
+
+    public ExperienceManager(MinecraftRPG plugin) {
+        this.plugin = plugin;
+    }
 
     public int calculateRequiredExperience(int level) {
         if (level < 1 || level > MAX_LEVEL) return -1;
@@ -39,6 +45,23 @@ public class ExperienceManager {
 
         // Play level up sound
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+
+        // Debug message to see if this part is reached
+        player.sendMessage(ChatColor.GRAY + "Debug: Attempting to grant attribute point...");
+
+        if (plugin == null) {
+            player.sendMessage(ChatColor.RED + "Debug: Plugin instance is null!");
+            return;
+        }
+
+        if (plugin.getAttributeManager() == null) {
+            player.sendMessage(ChatColor.RED + "Debug: AttributeManager is null!");
+            return;
+        }
+
+        // Grant attribute point
+        plugin.getAttributeManager().addAttributePoint(player);
+        player.sendMessage(ChatColor.GRAY + "Debug: Attribute point granted successfully!");
     }
 
     private void updateVanillaExpBar(Player player, ClassExperience cExp) {

@@ -4,11 +4,11 @@ import com.example.minecraftrpg.classes.RPGClass;
 import org.bukkit.Material;
 import com.example.minecraftrpg.classes.ClassTier;
 
-public class Archer extends RPGClass {
-    public Archer() {
+public class Apprentice extends RPGClass {
+    public Apprentice() {
         super(
-                "Archer",
-                "A novice bow user, learning the basics of archery",
+                "Apprentice",
+                "A novice magic user, learning the basics of spellcasting",
                 ClassTier.BEGINNER,
                 100.0,  // Base Health
                 10.0,   // Health per level
